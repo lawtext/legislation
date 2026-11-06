@@ -1,0 +1,64 @@
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ vars.VERSION }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    env:
+      PATH_SITE: _site
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build website
+        run: |
+          if [[ -d $PATH_SITE ]]; then
+            echo "Clean $PATH_SITE"
+            rm -r $PATH_SITE
+          fi
+          mkdir -p $PATH_SITE
+          INDEX="$PATH_SITE/index.md"
+
+          # Generate index.md
+          echo "# 立法技术规范" > $INDEX
+          echo "" >> $INDEX
+          for f in *.md; do
+            [ "$f" = "README.md" ] && continue
+            [ "$f" = "index.md" ] && continue
+
+            name="${f%.md}"
+            echo "- [$name]($f)" >> $INDEX
+            cp "$f" "$PATH_SITE/"
+          done
+
+          cp -r images $PATH_SITE/
+          touch $PATH_SITE/.nojekyll
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: ${{ env.PATH_SITE }}
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
