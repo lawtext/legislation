@@ -24,7 +24,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     env:
-      PATH_SITE: _site
+      PATH_SITE: temp
 
     steps:
       - uses: actions/checkout@v7
@@ -38,26 +38,51 @@ jobs:
           mkdir -p $PATH_SITE
           INDEX="$PATH_SITE/index.md"
 
+          cat > $PATH_SITE/_config.yml <<EOF
+          title: 立法技术规范
+          description: documents about legislation
+          markdown: kramdown
+          theme: minima
+          EOF
+
           # Generate index.md
-          echo "# 立法技术规范" > $INDEX
-          echo "" >> $INDEX
+          cat > $INDEX <<EOF
+          ---
+          title: 立法技术规范
+          layout: default
+          ---
+
+          EOF
+
           for f in *.md; do
             [ "$f" = "README.md" ] && continue
             [ "$f" = "index.md" ] && continue
 
             name="${f%.md}"
             echo "- [$name]($f)" >> $INDEX
-            cp "$f" "$PATH_SITE/"
+            {
+              echo "---"
+              echo "title: $name"
+              echo "layout: default"
+              echo "---"
+              echo ""
+              cat "$f"
+            } > "$PATH_SITE/$f"
           done
 
           cp -r images $PATH_SITE/
-          touch $PATH_SITE/.nojekyll
 
       - uses: actions/configure-pages@v6
 
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ${{ env.PATH_SITE }}
+          destination: _site
+
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: ${{ env.PATH_SITE }}
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
