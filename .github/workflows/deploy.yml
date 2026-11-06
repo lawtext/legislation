@@ -40,9 +40,8 @@ jobs:
 
           cat > $PATH_SITE/_config.yml <<EOF
           title: 立法技术规范
-          description: documents about legislation
           markdown: kramdown
-          theme: minima
+          theme: jekyll-theme-merlot
           EOF
 
           # Generate index.md
