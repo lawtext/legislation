@@ -1,8 +1,3 @@
 title: 立法技术规范
 markdown: kramdown
 theme: jekyll-theme-merlot
-
-# 本地预览
-url: ""
-baseurl: ""
-show_downloads: false
