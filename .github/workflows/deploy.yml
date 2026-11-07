@@ -1,11 +1,9 @@
-
 name: Deploy
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
 
 concurrency:
   group: ${{ github.workflow }}-${{ vars.VERSION }}
@@ -25,51 +23,20 @@ jobs:
 
     env:
       PATH_SITE: temp
+      PATH_DIST: _site
 
     steps:
       - uses: actions/checkout@v7
 
+      - name: Checkout site
+        uses: actions/checkout@v7
+        with:
+          ref: site
+          path: ${{ env.PATH_SITE }}
+
       - name: Build website
         run: |
-          if [[ -d $PATH_SITE ]]; then
-            echo "Clean $PATH_SITE"
-            rm -r $PATH_SITE
-          fi
-          mkdir -p $PATH_SITE
-          INDEX="$PATH_SITE/index.md"
-
-          cat > $PATH_SITE/_config.yml <<EOF
-          title: 立法技术规范
-          markdown: kramdown
-          theme: jekyll-theme-merlot
-          EOF
-
-          # Generate index.md
-          cat > $INDEX <<EOF
-          ---
-          title: 立法技术规范
-          layout: default
-          ---
-
-          EOF
-
-          for f in *.md; do
-            [ "$f" = "README.md" ] && continue
-            [ "$f" = "index.md" ] && continue
-
-            name="${f%.md}"
-            echo "- [$name]($f)" >> $INDEX
-            {
-              echo "---"
-              echo "title: $name"
-              echo "layout: default"
-              echo "---"
-              echo ""
-              cat "$f"
-            } > "$PATH_SITE/$f"
-          done
-
-          cp -r images $PATH_SITE/
+          bash $PATH_SITE/deploy.sh $PATH_SITE
 
       - uses: actions/configure-pages@v6
 
@@ -77,11 +44,11 @@ jobs:
         uses: actions/jekyll-build-pages@v1
         with:
           source: ${{ env.PATH_SITE }}
-          destination: _site
+          destination: ${{ env.DIST }}
 
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: _site
+          path: ${{ env.DIST }}
 
       - name: Deploy to GitHub Pages
         id: deployment
