@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 set -eu
 PATH_SITE="${1:-temp}"
+IMAGE_DIR="images"
 
-# if [[ -d $PATH_SITE ]]; then
-# echo "Clean $PATH_SITE"
-# rm -r $PATH_SITE
-# fi
-# mkdir -p $PATH_SITE
-
+if [[ ! -d $PATH_SITE ]]; then
+  echo "Create $PATH_SITE"
+  mkdir -p $PATH_SITE
+fi
 INDEX="$PATH_SITE/index.md"
 
 # Generate index.md
@@ -27,23 +26,25 @@ for f in *.md; do
   echo "- [$name]($f)" >> $INDEX
 
   cat> $PATH_SITE/$f <<EOF
-  ---
-  title: $name
-  layout: default
-  ---
+---
+title: $name
+layout: default
+---
 
-  <details>
-  <summary>目录（点击展开/折叠）</summary>
-  <div markdown="1">
+<details>
+<summary>目录（点击展开/折叠）</summary>
+<div markdown="1">
 
-  * TOC
-  {:toc}
+* TOC
+{:toc}
 
-  </div>
-  </details>
-  EOF
+</div>
+</details>
+EOF
 
   cat "$f" >> "$PATH_SITE/$f"
 done
 
-cp -r images $PATH_SITE/
+if [[ -d $IMAGE_DIR ]]; then
+  cp -r $IMAGE_DIR $PATH_SITE/
+fi
