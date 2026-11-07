@@ -3,3 +3,8 @@
 
 # linux
 *~
+
+_site/
+temp/
+images/
+*.md
